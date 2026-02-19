@@ -1,0 +1,74 @@
+# ╔══════════════════════════════════════════════╗
+# ║       TitanHammer Pro - Configuration        ║
+# ║              Version 1.0.0                    ║
+# ║              by Blooddev                      ║
+# ╚══════════════════════════════════════════════╝
+
+# ========================
+# Item Settings
+# ========================
+item:
+  # Custom Model Data for resource pack support
+  custom-model-data: 2025
+  # Display names (supports & color codes)
+  name: "&c&l⚡ TitanHammer &7&lPro"
+  name-ar: "&c&l⚡ مطرقة تايتن &7&lبرو"
+
+# ========================
+# Level System
+# ========================
+levels:
+  max-level: 100
+  # Base XP needed for level 2 (scales with level^xp-multiplier)
+  base-xp: 100
+  # XP scaling exponent (higher = harder to level)
+  xp-multiplier: 1.5
+  # XP gained per block broken
+  block-break-xp: 5.0
+  # XP gained per mob killed
+  mob-kill-xp: 15.0
+
+# ========================
+# Economy Settings
+# ========================
+economy:
+  # Options: vault, playerpoints, custom
+  default: "vault"
+
+# ========================
+# Effects Settings
+# ========================
+effects:
+  # Enable/disable particle effects
+  particles: true
+  # Enable/disable sound effects
+  sounds: true
+  # Show firework on level up
+  level-up-firework: true
+
+# ========================
+# Anti-Exploit Protection
+# ========================
+anti-exploit:
+  # Prevent Silk Touch on TitanHammer
+  silk-touch-protection: true
+  # Prevent duplication in anvils/grindstones
+  anti-duplication: true
+  # Block TitanHammer usage in creative mode
+  block-creative-mode: true
+
+# ========================
+# Data Storage
+# ========================
+storage:
+  # Storage type (yaml for now, mysql planned)
+  type: "yaml"
+  # Auto-save interval in minutes
+  auto-save-minutes: 5
+
+# ========================
+# Language Settings
+# ========================
+language:
+  # Default language (en = English, ar = Arabic)
+  default: "en"

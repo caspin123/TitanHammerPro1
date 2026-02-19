@@ -1,0 +1,30 @@
+name: TitanHammerPro
+version: 1.0.0
+main: com.titanhammer.TitanHammerPro
+api-version: '1.21'
+description: Advanced custom Netherite Axe with leveling, skills, and block filter system
+author: Blooddev
+website: https://primehost.dev
+
+softdepend:
+  - Vault
+  - PlayerPoints
+  - MythicMobs
+
+commands:
+  titanhammer:
+    description: TitanHammer Pro main command
+    aliases: [th, titan]
+    permission: titanhammer.use
+    usage: /<command> [subcommand]
+
+permissions:
+  titanhammer.use:
+    description: Allows using TitanHammer
+    default: true
+  titanhammer.give.self:
+    description: Allows getting a hammer from GUI
+    default: op
+  titanhammer.admin:
+    description: Full admin access to TitanHammer commands
+    default: op

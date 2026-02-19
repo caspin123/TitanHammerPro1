@@ -1,0 +1,32 @@
+# TitanHammer Pro - Arabic Messages / رسائل عربية
+# المتغيرات: {level}, {skill}, {mode}, {player}, {amount}
+
+prefix: "&8[&c⚡ تايتن&8] "
+
+# عام
+no-permission: "&cلا تملك صلاحية للقيام بهذا!"
+hammer-received: "&aلقد حصلت على &c⚡ مطرقة تايتن برو&a!"
+not-your-hammer: "&cهذه المطرقة لا تخصك!"
+
+# نظام المستويات
+level-up: "&a&l⚡ ارتقيت مستوى! &7أنت الآن مستوى &e&l{level}&7!"
+xp-gained: "&7+&b{amount} خبرة"
+
+# المهارات
+skill-upgraded: "&a✔ &e{skill} &aتمت ترقيتها إلى مستوى &e{level}&a!"
+skill-locked: "&cهذه المهارة مقفلة! أكمل المتطلبات الأولية."
+skill-maxed: "&eهذه المهارة وصلت للحد الأقصى!"
+not-enough-money: "&cلا تملك ما يكفي من المال لهذه الترقية!"
+
+# فلتر الكتل
+filter-mode-changed: "&7تم تغيير وضع الفلتر إلى: &a{mode}"
+filters-cleared: "&7تم مسح جميع فلاتر الكتل!"
+
+# مكافحة الاستغلال
+anti-exploit-blocked: "&cلا يمكنك استخدام مطرقة تايتن بهذه الطريقة!"
+
+# اللغة
+language-changed: "&aتم تغيير اللغة إلى العربية!"
+
+# شريط الإجراء
+actionbar-xp: "&7⚡ &bخبرة: {xp}/{max_xp} &8| &eمستوى {level}"

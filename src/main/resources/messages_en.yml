@@ -1,0 +1,32 @@
+# TitanHammer Pro - English Messages
+# Placeholders: {level}, {skill}, {mode}, {player}, {amount}
+
+prefix: "&8[&c⚡ TitanHammer&8] "
+
+# General
+no-permission: "&cYou don't have permission to do this!"
+hammer-received: "&aYou received the &c⚡ TitanHammer Pro&a!"
+not-your-hammer: "&cThis hammer doesn't belong to you!"
+
+# Level System
+level-up: "&a&l⚡ LEVEL UP! &7You are now level &e&l{level}&7!"
+xp-gained: "&7+&b{amount} XP"
+
+# Skills
+skill-upgraded: "&a✔ &e{skill} &aupgraded to level &e{level}&a!"
+skill-locked: "&cThis skill is locked! Complete the prerequisites first."
+skill-maxed: "&eThis skill is already at maximum level!"
+not-enough-money: "&cYou don't have enough funds for this upgrade!"
+
+# Block Filter
+filter-mode-changed: "&7Filter mode changed to: &a{mode}"
+filters-cleared: "&7All block filters have been cleared!"
+
+# Anti-Exploit
+anti-exploit-blocked: "&cYou cannot use the TitanHammer in this way!"
+
+# Language
+language-changed: "&aLanguage changed to English!"
+
+# Action Bar
+actionbar-xp: "&7⚡ &bXP: {xp}/{max_xp} &8| &eLv.{level}"

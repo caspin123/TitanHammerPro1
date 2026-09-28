@@ -146,10 +146,10 @@ function drawOctopus(x, y, s, t, wave = 0, glowA = 1) {
 
 // ---------- the boy ----------
 const POSES = {
-  typing: { eN: [40, 62], hN: [125, 95], eF: [32, 60], hF: [112, 92], lean: 0.06, tilt: 0.05 },
+  typing: { eN: [60, 70], hN: [150, 85], eF: [52, 68], hF: [136, 84], lean: 0.06, tilt: 0.05 },
   head:   { eN: [62, -18], hN: [42, -80], eF: [46, -22], hF: [24, -86], lean: -0.12, tilt: -0.05 },
-  shield: { eN: [58, 18], hN: [78, -58], eF: [34, 60], hF: [104, 90], lean: -0.18, tilt: -0.1 },
-  rest:   { eN: [42, 64], hN: [118, 90], eF: [32, 62], hF: [108, 88], lean: 0.02, tilt: -0.02 },
+  shield: { eN: [58, 18], hN: [78, -58], eF: [52, 70], hF: [134, 85], lean: -0.18, tilt: -0.1 },
+  rest:   { eN: [60, 72], hN: [148, 86], eF: [52, 70], hF: [134, 85], lean: 0.02, tilt: -0.02 },
   cheer:  { eN: [44, -52], hN: [66, -135], eF: [-8, -55], hF: [12, -138], lean: -0.06, tilt: -0.12 },
   wave:   { eN: [58, -48], hN: [80, -128], eF: [30, 60], hF: [72, 86], lean: -0.08, tilt: -0.22 }
 };
@@ -488,25 +488,71 @@ function drawWindow(t, lightUp, octoIn) {
   ctx.fillStyle = '#5a2b44'; ctx.fillRect(x - 70, y - 28, w + 140, 10);
 }
 
+function drawTower(t) {
+  // PC tower under the desk with glass side, fans and RGB
+  const x = 860, y = 500, w = 88, h = 100;
+  ctx.fillStyle = '#16171c'; rr(x, y, w, h, 6); ctx.fill();
+  ctx.fillStyle = '#0b0c10'; rr(x + 6, y + 8, w - 12, h - 18, 4); ctx.fill();
+  const hue = (t * 60) % 360;
+  for (let i = 0; i < 2; i++) {
+    const cx = x + w / 2, cy = y + 32 + i * 36;
+    ctx.strokeStyle = `hsl(${(hue + i * 60) % 360},90%,60%)`; ctx.lineWidth = 2.5; circle(cx, cy, 14); ctx.stroke();
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(t * 12 + i); ctx.fillStyle = '#3a3d48';
+    for (let k = 0; k < 4; k++) { ctx.rotate(Math.PI / 2); ctx.beginPath(); ctx.ellipse(6, 0, 6, 2.5, 0.4, 0, Math.PI * 2); ctx.fill(); }
+    ctx.restore();
+  }
+  ctx.fillStyle = `hsl(${hue},90%,60%)`; ctx.fillRect(x + 6, y + h - 8, w - 12, 2);
+  ctx.fillStyle = '#7ee787'; circle(x + w - 10, y + 5, 1.8); ctx.fill();
+  ctx.fillStyle = '#111'; ctx.fillRect(x + 6, y + h, 10, 3); ctx.fillRect(x + w - 16, y + h, 10, 3);
+}
+
 function drawDesk(t, err, lightUp) {
-  // desk
-  ctx.fillStyle = '#6b4a35'; ctx.beginPath(); ctx.moveTo(600, 470); ctx.lineTo(1200, 470); ctx.lineTo(1215, 488); ctx.lineTo(590, 488); ctx.fill();
-  ctx.fillStyle = '#4e3526'; ctx.fillRect(590, 488, 625, 14);
-  ctx.fillStyle = '#3f2b1f'; ctx.fillRect(610, 502, 18, 98); ctx.fillRect(1175, 502, 18, 98);
+  // desk (front edge brought closer to the chair so the keyboard sits under the hands)
+  ctx.fillStyle = '#6b4a35'; ctx.beginPath(); ctx.moveTo(565, 470); ctx.lineTo(1200, 470); ctx.lineTo(1215, 488); ctx.lineTo(555, 488); ctx.fill();
+  ctx.fillStyle = '#7d5840'; ctx.fillRect(565, 470, 635, 3);
+  ctx.fillStyle = '#4e3526'; ctx.fillRect(555, 488, 660, 14);
+  ctx.fillStyle = '#3f2b1f'; ctx.fillRect(572, 502, 16, 98); ctx.fillRect(1175, 502, 18, 98);
   ctx.fillStyle = '#35241a'; ctx.fillRect(1010, 502, 165, 70); // drawer
   ctx.fillStyle = '#c9a27e'; ctx.fillRect(1080, 530, 26, 5);
-  // monitor
+  drawTower(t);
+
+  // monitor stand (behind the panel): silver arm + flat base
+  const sg = ctx.createLinearGradient(900, 0, 960, 0);
+  sg.addColorStop(0, '#6e7380'); sg.addColorStop(0.5, '#c3c8d2'); sg.addColorStop(1, '#6e7380');
+  ctx.fillStyle = sg; ctx.beginPath(); ctx.moveTo(914, 380); ctx.lineTo(946, 380); ctx.lineTo(958, 466); ctx.lineTo(904, 466); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#8b909b'; ctx.beginPath(); ctx.ellipse(931, 468, 70, 7, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#c3c8d2'; ctx.beginPath(); ctx.ellipse(931, 466, 66, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+  // monitor: thin bezel, visible side depth, chin with logo, webcam
   ctx.save(); ctx.translate(740, 212); ctx.transform(1, -0.06, 0, 1, 0, 0);
-  ctx.fillStyle = '#16171c'; rr(-14, -14, 408, 258, 14); ctx.fill();
-  ctx.fillStyle = '#2a2c34'; rr(-14, 230, 408, 14, [0, 0, 14, 14]); ctx.fill();
-  ctx.fillStyle = COL.orange; circle(190, 237, 3); ctx.fill();
+  ctx.fillStyle = '#07080b'; rr(-2, -2, 396, 254, 12); ctx.fill();          // back shell peeking out
+  ctx.fillStyle = '#1a1c22'; ctx.beginPath(); ctx.moveTo(392, 0); ctx.lineTo(402, 8); ctx.lineTo(402, 238); ctx.lineTo(392, 246); ctx.fill(); // side thickness
+  const bz = ctx.createLinearGradient(0, -8, 0, 250);
+  bz.addColorStop(0, '#2b2e36'); bz.addColorStop(1, '#15161b');
+  ctx.fillStyle = bz; rr(-8, -8, 396, 256, 10); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1.5; rr(-7.5, -7.5, 395, 255, 10); ctx.stroke();
+  ctx.fillStyle = '#0d0e12'; circle(190, -3.5, 2); ctx.fill();                  // webcam
+  ctx.fillStyle = '#c3c8d2'; rr(-8, 232, 396, 16, [0, 0, 10, 10]); ctx.fill();  // aluminium chin
+  ctx.fillStyle = COL.orange; claudeMark(190, 240, 4.5, COL.orange);
+  ctx.fillStyle = '#000'; rr(0, 0, 380, 230, 3); ctx.fill();
   drawScreen(t, err, lightUp);
   ctx.restore();
-  ctx.fillStyle = '#2a2c34'; ctx.fillRect(920, 440, 22, 34); ctx.beginPath(); ctx.ellipse(931, 472, 60, 8, 0, 0, Math.PI * 2); ctx.fill();
-  // keyboard + mouse
-  ctx.fillStyle = '#2d2f38'; rr(600, 458, 170, 14, 4); ctx.fill();
-  for (let i = 0; i < 14; i++) { ctx.fillStyle = t < T.typeEnd && rnd(Math.floor(t * 15) + i) > 0.8 ? '#8fb3ff' : '#4a4d58'; ctx.fillRect(606 + i * 11.5, 461, 9, 4); }
-  ctx.fillStyle = '#2d2f38'; ctx.beginPath(); ctx.ellipse(800, 466, 12, 7, 0, 0, Math.PI * 2); ctx.fill();
+
+  // keyboard (slim, backlit) right under the hands + mouse on a pad
+  const kg = ctx.createLinearGradient(0, 456, 0, 472);
+  kg.addColorStop(0, '#3a3d48'); kg.addColorStop(1, '#23252d');
+  ctx.fillStyle = kg; rr(575, 458, 150, 13, 4); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(577, 470, 146, 3);
+  for (let row = 0; row < 2; row++) for (let i = 0; i < 12; i++) {
+    const lit = t < T.typeEnd && rnd(Math.floor(t * 15) * 31 + i + row * 12) > 0.82;
+    ctx.fillStyle = lit ? '#9cc0ff' : '#50535f';
+    ctx.fillRect(581 + i * 11.8 + row * 3, 460.5 + row * 4.5, 9.5, 3.2);
+  }
+  const rgb = `hsl(${(t * 60) % 360},90%,60%)`;
+  ctx.fillStyle = rgb; ctx.globalAlpha = 0.5; ctx.fillRect(577, 470, 146, 1.5); ctx.globalAlpha = 1;
+  ctx.fillStyle = '#1b1c22'; rr(745, 466, 60, 5, 2); ctx.fill();
+  ctx.fillStyle = '#2d2f38'; ctx.beginPath(); ctx.ellipse(775, 463, 12, 6, 0, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = rgb; circle(775, 460, 1.5); ctx.fill();
   // mug with steam
   ctx.fillStyle = COL.orange; rr(1110, 430, 34, 40, 5); ctx.fill();
   ctx.strokeStyle = COL.orange; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(1146, 450, 9, -Math.PI / 2, Math.PI / 2); ctx.stroke();

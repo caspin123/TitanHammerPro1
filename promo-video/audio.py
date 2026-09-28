@@ -1,9 +1,10 @@
 """Procedural cinematic soundtrack for the Prime Host promo (royalty-free, synced to the timeline).
 
 Tempo is 106.67 BPM so every scene cut (8.0 / 12.5 / 17 / 21.5 / 26 s) lands exactly on a bar line.
-Layers: dark intro swell -> cinematic hit (crown) -> warm pad + bell plucks -> groove (kick, sub,
-arp, soft clap/hats, side-chained pad) -> breakdown -> final hit + resolve. Everything goes through a
-stereo convolution reverb and a gentle master chain.
+Layers: dark intro swell -> cinematic hit (crown) -> warm pad + soft plucks -> groove (kick, sub,
+arp, soft clap/hats, side-chained pad) -> breakdown -> final hit + resolve, plus a motion-SFX layer
+synced to the on-screen animation (whooshes, soft UI pops, clay bloops, impacts). Everything goes
+through a stereo convolution reverb and a gentle master chain (quiet, ~-18 LUFS, soft top end).
 
 Usage: python3 audio.py out.wav
 """
@@ -19,6 +20,7 @@ N = int(SR * DUR)
 T = np.arange(N) / SR
 rng = np.random.default_rng(11)
 
+MASTER_GAIN = 10 ** (-4.0 / 20)
 BEAT = 60 / 106.6667          # 0.5625 s
 GROOVE_START, GROOVE_END = 8.0, 26.0
 HIT1, HIT2 = 2.5, 27.35
@@ -116,16 +118,6 @@ def pluck(note, dur=1.2, bright=1.0):
     return y * .5
 
 
-def bell(note, dur=3.0):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    f = hz(note)
-    mod = np.sin(2 * np.pi * f * 3.5 * t) * 2.2 * np.exp(-t * 3)
-    y = np.sin(2 * np.pi * f * t + mod) * np.exp(-t * 1.6)
-    y += .25 * np.sin(2 * np.pi * f * 2 * t) * np.exp(-t * 2.5)
-    return y * np.minimum(1, t / .002) * .45
-
-
 def kick(dur=.55, punch=1.0):
     n = int(dur * SR)
     t = np.arange(n) / SR
@@ -181,10 +173,10 @@ def braam(notes, dur=3.5):
             raw += saw(hz(note) * det, n, rng.random())
     raw /= len(notes) * 3
     dark = filt(raw, 'lowpass', 260, 4)
-    bright = filt(raw, 'lowpass', 1800, 2)
+    bright = filt(raw, 'lowpass', 1100, 2)
     open_k = np.exp(-t * 2.2)
     y = dark * (1 - open_k) + bright * open_k
-    return np.tanh(y * 2.2) * adsr(n, .015, .4, .55, 2.2)
+    return np.tanh(y * 1.3) * adsr(n, .03, .5, .5, 2.2)
 
 
 def sub_drop(dur=2.5):
@@ -225,18 +217,24 @@ out(0, drone, gain=.35, rev=.4)
 # --- cinematic hits ---
 for at, g in [(HIT1, 1.0), (HIT2, 1.1)]:
     out(at, sub_drop(), gain=.55 * g)
-    out(at, braam([33, 40, 45, 52], 3.8), gain=.30 * g, rev=.6)
-    out(at, kick(.8, 1.4), gain=.55 * g)
-    out(at, filt(rng.standard_normal(int(1.6 * SR)) * np.exp(-np.arange(int(1.6 * SR)) / SR * 5), 'lowpass', 5000),
-        gain=.05 * g, rev=1.4)
+    out(at, braam([33, 40, 45, 52], 3.8), gain=.22 * g, rev=.5)
+    out(at, kick(.8, .4), gain=.45 * g)
+    out(at, filt(rng.standard_normal(int(1.6 * SR)) * np.exp(-np.arange(int(1.6 * SR)) / SR * 5), 'lowpass', 1800),
+        gain=.03 * g, rev=1.0)
 # smaller accents on scene cuts
 for at in (8.0, 12.5, 17.0, 21.5):
     out(at, sub_drop(1.2), gain=.22)
 
-# --- shimmer bells on logo shine moments ---
-for at, notes in [(2.95, [81, 84, 88, 93]), (6.4, [76, 81, 84, 88]), (27.6, [81, 84, 88, 93, 96])]:
-    for j, nt in enumerate(notes):
-        out(at + j * .085, bell(nt), pan=(j / (len(notes) - 1) - .5) * .9, gain=.10, rev=1.1)
+# --- warm "glow" swells on logo shine moments (soft sine chord, no metallic partials) ---
+def glow(notes, dur=2.4):
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    y = sum(np.sin(2 * np.pi * hz(nt) * t * (1 + .0015 * np.sin(2 * np.pi * 4.5 * t))) for nt in notes) / len(notes)
+    return filt(y * adsr(n, .35, .4, .5, 1.4), 'lowpass', 2500)
+
+
+for at, notes in [(2.75, [69, 72, 76]), (6.25, [64, 69, 72]), (27.4, [69, 72, 76, 81])]:
+    out(at, glow(notes), gain=.07, rev=.9)
 
 # --- pads (side-chained during the groove) ---
 pad = np.zeros((N, 2))
@@ -258,10 +256,10 @@ dry += pad * .28
 send += pad * .28 * .5
 
 # --- bell-pluck arpeggio before the groove (4.5 – 8) ---
-arp_intro = [69, 72, 76, 79, 81, 79, 76, 72]
+arp_intro = [57, 60, 64, 67, 69, 67, 64, 60]
 for i in range(12):
     at = 4.5 + i * BEAT / 2 + (.0 if i < 6 else .0)
-    out(at, pluck(arp_intro[i % 8], 1.4, .7), pan=((i % 4) / 3 - .5) * .6, gain=.10 + .01 * i, rev=.7)
+    out(at, pluck(arp_intro[i % 8], 1.4, .4), pan=((i % 4) / 3 - .5) * .6, gain=.10 + .01 * i, rev=.7)
 
 # --- groove (8 – 26) ---
 b, beat_i = GROOVE_START, 0
@@ -274,12 +272,12 @@ while b < GROOVE_END - 1e-6:
         out(b, kick(), gain=.42)
     # soft clap on 2 & 4 from 12.5
     if section2 and bar_pos in (1, 3):
-        out(b, clap(), gain=.17, rev=.6)
+        out(b, clap(), gain=.12, rev=.6)
     # offbeat hats
     if section2:
-        out(b + BEAT / 2, hat(), pan=.25, gain=.10)
+        out(b + BEAT / 2, hat(), pan=.25, gain=.06)
         if b >= 17.0:
-            out(b + BEAT * .75, hat(.05), pan=-.2, gain=.07)
+            out(b + BEAT * .75, hat(.05), pan=-.2, gain=.04)
     # sub bass: root on the offbeat 8th (classic pumping pattern)
     for off in (0.5,):
         bn = int(BEAT / 2 * SR)
@@ -290,30 +288,103 @@ while b < GROOVE_END - 1e-6:
         out(b + BEAT * off, sb, gain=.20)
     # arp: 8th notes on chord tones, 2 octaves
     tones = sorted(notes)
-    seq = [tones[0] + 12, tones[1] + 12, tones[2] + 12, tones[3] + 12, tones[2] + 24, tones[3] + 12, tones[1] + 12, tones[2] + 12]
+    seq = [tones[0], tones[1], tones[2], tones[3], tones[2] + 12, tones[3], tones[1], tones[2]]
     for h in range(2):
         idx = (beat_i * 2 + h) % len(seq)
         vel = .085 if h == 0 else .06
-        out(b + h * BEAT / 2, pluck(seq[idx], .9, .9), pan=(.35 if idx % 2 else -.35), gain=vel, rev=.55)
+        out(b + h * BEAT / 2, pluck(seq[idx], .9, .5), pan=(.35 if idx % 2 else -.35), gain=vel, rev=.55)
     b += BEAT
     beat_i += 1
 
-# --- transition whooshes (soft, band-passed, panned sweeps) ---
-for at in (4.4, 7.55, 12.2, 16.75, 21.25, 25.75):
-    w = swept_noise(1.1, 250, 3200, q=2.2, shape='swell')
-    w *= np.sin(np.linspace(0, np.pi, len(w))) ** 2
-    pan = np.linspace(-.8, .8, len(w))
-    st = np.stack([w * np.cos((pan + 1) * np.pi / 4), w * np.sin((pan + 1) * np.pi / 4)], 1)
-    out(at - .45, st, gain=.07, rev=.5)
+# ============================ MOTION SFX ============================
+def whoosh(dur=1.0, f0=180, f1=1400, peak=.55):
+    """Airy pass-by: swept band-pass noise + a low 'air' body, asymmetric envelope, L->R pan."""
+    n = int(dur * SR)
+    k = np.linspace(0, 1, n)
+    env = np.where(k < peak, (k / peak) ** 2.2, ((1 - k) / (1 - peak)) ** 1.6)
+    hi = swept_noise(dur, f0, f1, q=1.6, shape='swell')
+    lo = filt(rng.standard_normal(n), 'lowpass', 260)
+    y = (hi * .8 + lo * .6) * env
+    y = filt(y, 'lowpass', 3000)
+    pan = np.linspace(-.7, .7, n)
+    return np.stack([y * np.cos((pan + 1) * np.pi / 4), y * np.sin((pan + 1) * np.pi / 4)], 1)
+
+
+def soft_pop(f=620, dur=.12):
+    """Rounded UI 'pop' — pitch-dropping sine with a tiny muted transient."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    fr = f * (1 + .6 * np.exp(-t * 60))
+    y = np.sin(2 * np.pi * np.cumsum(fr) / SR) * np.exp(-t * 38) * np.minimum(1, t / .002)
+    y += filt(rng.standard_normal(n) * np.exp(-t * 300), 'lowpass', 1500) * .15
+    return y
+
+
+def bloop(f0=280, f1=620, dur=.18):
+    """Clay 'bloop' — upward pitch glide, soft and round."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    fr = f0 + (f1 - f0) * (1 - np.exp(-t * 30))
+    y = np.sin(2 * np.pi * np.cumsum(fr) / SR) * np.exp(-t * 22) * np.minimum(1, t / .004)
+    return y + .3 * np.sin(2 * np.pi * np.cumsum(fr * 2) / SR) * np.exp(-t * 40)
+
+
+def thump(dur=.6):
+    """Soft low impact for panels landing."""
+    n = int(dur * SR)
+    t = np.arange(n) / SR
+    fr = 45 + 70 * np.exp(-t * 25)
+    return np.sin(2 * np.pi * np.cumsum(fr) / SR) * np.exp(-t * 7) * np.minimum(1, t / .003)
+
+
+SFX = .9  # overall SFX level
+
+# intro: energy gathering into the logo, then the crown falling
+out(0.1, whoosh(2.3, 120, 900, peak=.85), gain=.10 * SFX, rev=.6)
+out(1.95, whoosh(.6, 900, 250, peak=.8), gain=.10 * SFX, rev=.3)          # crown drop (pitch-down)
+# wordmark
+out(4.4, whoosh(1.1, 150, 1100), gain=.10 * SFX, rev=.4)                   # logo rises
+for i in range(9):                                                         # letters flip in
+    out(4.97 + i * .055, soft_pop(520 + i * 25, .09), pan=(i / 8 - .5) * .8, gain=.05 * SFX, rev=.3)
+out(5.5, whoosh(1.0, 300, 1600, peak=.5), gain=.05 * SFX, rev=.5)          # gold line draws
+# scene transitions (scene exit + gold light streak)
+for at in (7.5, 12.2, 16.75, 21.25, 25.7):
+    out(at - .1, whoosh(1.1, 160, 1500), gain=.13 * SFX, rev=.45)
+# performance panel
+out(8.05, thump(), gain=.18 * SFX)
+for i in range(3):
+    out(8.62 + i * .1, soft_pop(560 + i * 60), pan=-.3 + i * .15, gain=.07 * SFX, rev=.3)
+for i in range(3):
+    out(9.42 + i * .12, soft_pop(440 + i * 50, .1), pan=-.4, gain=.05 * SFX, rev=.3)
+out(9.0, whoosh(1.8, 200, 900, peak=.7), gain=.04 * SFX, rev=.6)          # chart drawing
+# feature cards + clay icons
+for i in range(6):
+    out(12.87 + i * .09, whoosh(.45, 300, 1200, peak=.4), gain=.035 * SFX, rev=.3)
+    out(13.32 + i * .09, bloop(260 + i * 20, 600 + i * 30), pan=(i % 3 - 1) * .5, gain=.07 * SFX, rev=.35)
+# globe + stats
+out(17.1, whoosh(1.6, 100, 700, peak=.4), gain=.10 * SFX, rev=.6)
+out(17.15, thump(.8), gain=.14 * SFX)
+for i in range(3):
+    out(18.02 + i * .12, soft_pop(600 - i * 50), pan=.2 + i * .15, gain=.07 * SFX, rev=.3)
+# pricing cards + badge
+out(21.87, thump(), gain=.15 * SFX)
+out(22.1, whoosh(.7, 250, 1200, peak=.4), gain=.06 * SFX, rev=.4)
+out(22.22, whoosh(.7, 250, 1200, peak=.4)[:, ::-1], gain=.06 * SFX, rev=.4)
+out(23.2, bloop(320, 760, .22), gain=.09 * SFX, rev=.4)
+# outro: logo returns, CTA pops, ripples
+out(25.95, whoosh(1.3, 120, 1000, peak=.65), gain=.10 * SFX, rev=.5)
+out(27.82, bloop(240, 540, .25), gain=.11 * SFX, rev=.5)
+for at in (28.5, 29.1):
+    out(at, filt(whoosh(.9, 600, 250, peak=.15)[:, 0], 'lowpass', 1200), gain=.04 * SFX, rev=.8)
 
 # --- riser into the finale (26 -> 27.35) ---
 r_len = HIT2 - 25.9
-rs = swept_noise(r_len, 300, 6000, q=2.5)
+rs = filt(swept_noise(r_len, 250, 2500, q=2.0), 'lowpass', 3000)
 rs *= np.linspace(0, 1, len(rs)) ** 2
-out(25.9, rs, gain=.06, rev=.6)
+out(25.9, rs, gain=.05, rev=.6)
 tn = np.arange(int(r_len * SR)) / SR
 rise_tone = np.sin(2 * np.pi * np.cumsum(220 * 2 ** (tn / r_len * 1.0)) / SR) * (tn / r_len) ** 2
-out(25.9, rise_tone, gain=.05, rev=.8)
+out(25.9, rise_tone, gain=.03, rev=.8)
 
 # --- final sustained chord after the hit ---
 final = supersaw([45, 57, 64, 69, 71, 76], 2.6, cutoff=2200) * adsr(int(2.6 * SR), .05, .5, .6, 2.0)[:, None]
@@ -332,12 +403,14 @@ mix = dry + wet * .55
 
 # ============================ MASTER ============================
 mix = filt(mix, 'highpass', 28)
+mix = filt(mix, 'lowpass', 11000, 1)                # soften the top end
 fade_in = np.minimum(1, T / .05)
 fade_out = np.clip((DUR - T) / 1.2, 0, 1) ** 1.5
 mix *= (fade_in * fade_out)[:, None]
 mix /= np.max(np.abs(mix)) + 1e-9
 mix = np.tanh(mix * 1.25) / np.tanh(1.25)            # gentle saturation / glue
 mix *= 10 ** (-1.0 / 20) / (np.max(np.abs(mix)) + 1e-9)
+mix *= MASTER_GAIN                                   # comfortable level (~-18 LUFS)
 pcm = (mix * 32767).astype(np.int16)
 
 with wave.open(sys.argv[1] if len(sys.argv) > 1 else 'soundtrack.wav', 'wb') as w:

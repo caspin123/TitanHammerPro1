@@ -11,7 +11,7 @@ Full storyboard and design decisions: [DESIGN_PLAN.md](DESIGN_PLAN.md).
 |---|---|
 | `index.html` | The whole animation (HTML/CSS + GSAP timeline + canvas FX). Open it in a browser for a live, looping preview. All texts/prices live in the `CONFIG` object at the top. |
 | `render.mjs` | Deterministic frame renderer (Playwright/Chromium, seeks the timeline frame by frame, parallel workers). |
-| `audio.py` | Procedural, royalty-free cinematic soundtrack (106.67 BPM, locked to scene cuts): braam hits, bells, side-chained pad, arp, kick/clap/hats, convolution reverb, mastered to ~-15 LUFS. |
+| `audio.py` | Procedural, royalty-free cinematic soundtrack (106.67 BPM, locked to scene cuts): soft braam hits, warm glow swells, side-chained pad, arp, soft drums, plus motion SFX synced to the animation (whooshes, UI pops, clay bloops, thumps); convolution reverb, mastered to a comfortable ~-18 LUFS. |
 | `build.sh` | One command: frames → audio → MP4 + poster. |
 | `assets/` | Logo (upscaled, split into crown/body for animation), world land-dot map for the globe. |
 
